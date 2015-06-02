@@ -16,10 +16,53 @@
 
 'For the copy of the GNU General Public License, visit <http://www.gnu.org/licenses/>.
 
+Imports System.IO
 ''' <summary> Main Module. </summary>
 Module Mdl_Main
-    ''' <summary>  </summary>
-    Private Sub Run()
+    Private Const PATH = "./cmd.bin"
+
+    Private cmds As Cmd() = {}
+    Private Sub ReadCmds()
+        Dim bnr As BinaryReader = Nothing
+        Dim fst As FileStream = Nothing
+        Try
+            fst = New FileStream(PATH, FileMode.Open, FileAccess.Read)
+            bnr = New BinaryReader(fst)
+            cmds = Cmd.FromText(bnr)
+            fst.Close()
+        Catch ex As Exception
+            cmds = {}
+            If fst IsNot Nothing Then
+                fst.Close()
+            End If
+        End Try
+    End Sub
+
+    Private Sub SaveCmds()
+        Dim bnw As BinaryWriter = Nothing
+        Dim fst As FileStream = Nothing
+        Try
+            fst = New FileStream(PATH, FileMode.Open, FileAccess.Read)
+            bnw = New BinaryWriter(fst)
+            cmds.ToText(bnw)
+            fst.Flush()
+            fst.Close()
+        Catch ex As Exception
+            If fst IsNot Nothing Then
+                fst.Close()
+            End If
+        End Try
+    End Sub
+
+    Private Sub Register(ByVal param() As String)
+
+    End Sub
+
+    Private Sub Delete(ByVal param() As String)
+
+    End Sub
+
+    Private Sub Run(ByVal param() As String)
 
     End Sub
 
@@ -70,8 +113,8 @@ Module Mdl_Main
         End If
 
         'Enumerate switches
-        Dim cmdStart As Integer
-        Dim argCount = args.Length
+        Dim cmdStart As Integer = -1
+        Dim argCount As Integer = args.Length
         For i As Integer = 0 To argCount - 1
             If Not isArg(args(i)) Then
                 cmdStart = i
@@ -89,12 +132,27 @@ Module Mdl_Main
             Return
         End If
 
+        If swtHelp Then
+            MdlHelpText.PrintHelpInfo() : Return
+        End If
+
+        If cmdStart = -1 Then
+            Console.WriteLine("Fatal error : no command name")
+        End If
+
+        Dim temp As String() = Array.CreateInstance("".GetType, argCount - cmdStart)
+        Array.Copy(args, cmdStart, temp, 0, argCount - cmdStart)
+
+        ReadCmds()
+
         If swtRegister Then 'register
+
         ElseIf swtDelete Then 'delete
-        ElseIf swtHelp Then 'Print help infomation
+
         Else 'Run
 
         End If
 
+        SaveCmds()
     End Sub
 End Module
