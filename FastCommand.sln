@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Basic Express 2010
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "FastC", "FastC\FastC.vbproj", "{55839378-8422-46A1-B288-43E2B8ABF262}"
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "fastc", "FastC\fastc.vbproj", "{55839378-8422-46A1-B288-43E2B8ABF262}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -17,9 +17,10 @@
 'For the copy of the GNU General Public License, visit <http://www.gnu.org/licenses/>.
 
 Imports System.IO
+Imports System.Collections.Generic
 ''' <summary> Main Module. </summary>
 Module Mdl_Main
-    Private Const PATH = "./cmd.bin"
+    Private Const PATH = "./_cmddata"
 
     Private cmds As Cmd() = {}
     Private Sub ReadCmds()
@@ -42,7 +43,7 @@ Module Mdl_Main
         Dim bnw As BinaryWriter = Nothing
         Dim fst As FileStream = Nothing
         Try
-            fst = New FileStream(PATH, FileMode.Open, FileAccess.Read)
+            fst = New FileStream(PATH, FileMode.Create, FileAccess.Write)
             bnw = New BinaryWriter(fst)
             cmds.ToText(bnw)
             fst.Flush()
@@ -54,20 +55,78 @@ Module Mdl_Main
         End Try
     End Sub
 
-    Private Sub Register(ByVal param() As String)
+    Private Function Exists(ByVal name As String)
+        Return cmds.Any(Function(cmd As Cmd) cmd.Name = name)
+    End Function
 
+    Private Sub Register(ByVal param() As String)
+        Dim len = param.Length
+
+        If len < 2 Then
+            Console.WriteLine("Fatal error : invalid args") : Return
+        End If
+
+        Dim tcmd = New Cmd(param(0), param(1), "")
+
+        If len > 2 Then
+            Dim templist As New List(Of String)
+            For i As Integer = 2 To len - 1
+                templist.Add(param(i))
+            Next
+
+            tcmd.Args = String.Join(" ", templist)
+        End If
+
+        cmds = cmds.Concat({tcmd}).ToArray
     End Sub
 
     Private Sub Delete(ByVal param() As String)
+        If param.Length < 1 Then
+            Console.WriteLine("Fatal error : invalid args") : Return
+        End If
 
+        If Not Exists(param(0)) Then
+            Console.WriteLine("Fatal error : no such a command : {0}", param(0)) : Return
+        End If
+
+        cmds = cmds.Where(Function(cm As Cmd) cm.Name <> param(0)).ToArray()
     End Sub
 
     Private Sub Run(ByVal param() As String)
+        Dim len = param.Length
 
+        If len < 1 Then
+            Console.WriteLine("Fatal error : invalid args") : Return
+        Else
+            If Not Exists(param(0)) Then
+                Console.WriteLine("Fatal error : no such a command : {0}", param(0)) : Return
+            End If
+
+            Dim tcmd = cmds.First(Function(cm As Cmd) cm.Name = param(0))
+            Dim command = tcmd.Command
+            Dim args = IIf(swtBan, "", tcmd.Args)
+
+            If len > 1 Then
+                Dim templist As New List(Of String)
+                For i As Integer = 1 To len - 1
+                    templist.Add(param(i))
+                Next
+
+                If args <> "" Then args &= " "
+                args &= String.Join(" ", templist.ToArray())
+            End If
+
+            Shell(command & " " & args, AppWinStyle.NormalFocus, swtWait, )
+        End If
+    End Sub
+
+    Private Sub Show()
+        Array.ForEach(cmds, Sub(c As Cmd) Console.WriteLine("{0} : {1} [{2}]", c.Name, c.Command, c.Args))
     End Sub
 
     '' Switches
-    Dim swtHelp As Boolean = False, swtRegister As Boolean = False, swtDelete As Boolean = False
+    Dim swtHelp As Boolean = False, swtRegister As Boolean = False, swtDelete As Boolean = False, _
+        swtShow As Boolean = False, swtClear As Boolean = False
     Dim swtWait As Boolean = False, swtBan As Boolean = False
 
     '' Process args
@@ -84,6 +143,10 @@ Module Mdl_Main
                 swtRegister = True
             Case "-d", "-del"
                 swtDelete = True
+            Case "-c", "-clear"
+                swtClear = True
+            Case "-s", "-show"
+                swtShow = True
             Case "-w", "-wait"
                 swtWait = True
             Case "-b"
@@ -99,6 +162,8 @@ Module Mdl_Main
         If swtHelp Then temp += 1
         If swtDelete Then temp += 1
         If swtRegister Then temp += 1
+        If swtShow Then temp += 1
+        If swtClear Then temp += 1
 
         If temp >= 2 Then Return False
         If temp = 1 And (swtWait Or swtBan) Then Return False
@@ -128,31 +193,40 @@ Module Mdl_Main
         Next i
 
         If Not checkArgs() Then
-            Console.WriteLine("Fatal error : invalid args")
-            Return
+            Console.WriteLine("Fatal error : invalid args") : Return
         End If
 
         If swtHelp Then
             MdlHelpText.PrintHelpInfo() : Return
         End If
 
-        If cmdStart = -1 Then
-            Console.WriteLine("Fatal error : no command name")
+        If cmdStart = -1 And Not (swtClear Or swtShow) Then
+            Console.WriteLine("Fatal error : no command name") : Return
+        End If
+
+        ReadCmds()
+
+        If swtClear Then 'clear
+            cmds = {}
+            SaveCmds()
+            Return
+        ElseIf swtShow Then
+            Show()
+            Return
         End If
 
         Dim temp As String() = Array.CreateInstance("".GetType, argCount - cmdStart)
         Array.Copy(args, cmdStart, temp, 0, argCount - cmdStart)
 
-        ReadCmds()
-
         If swtRegister Then 'register
-
+            Register(temp)
+            SaveCmds()
         ElseIf swtDelete Then 'delete
-
+            Delete(temp)
+            SaveCmds()
         Else 'Run
-
+            Run(temp)
         End If
 
-        SaveCmds()
     End Sub
 End Module

@@ -32,7 +32,12 @@ Module MdlHelpText
         "    fastc -d|-del name" & vbCrLf & _
         "d. run a command." & vbCrLf & _
         "    fastc [-w|-wait] [-b] name [args...]" & vbCrLf & _
+        "e. show all registered command." & vbCrLf & _
+        "    fastc -s|-show" & vbCrLf & _
+        "f. clear all registered command." & vbCrLf & _
+        "    fastc -c|-clear" & vbCrLf & _
         "  1. if -w is set, FastCommand will wait your program to exit." & vbCrLf & _
+        "     -w is highly recommended while running a console application." & vbCrLf & _
         "  2. if -b is set, args defined when registering will be disabled." & vbCrLf & _
         "  3. if -b is not set and ""args..."" is provided, args defined here" & vbCrLf & _
         "     will be append to args defined when registering." & vbCrLf & _
