@@ -20,7 +20,7 @@ Imports System.IO
 Imports System.Collections.Generic
 ''' <summary> Main Module. </summary>
 Module Mdl_Main
-    Private Const PATH = "./_cmddata"
+    Private PATH = AppDomain.CurrentDomain.BaseDirectory & "_cmddata"
 
     Private cmds As Cmd() = {}
     Private Sub ReadCmds()
